@@ -7,7 +7,8 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.5</version>
+        <!-- 3.5.12: fixes CVE-2026-22733 (actuator auth bypass) -->
+        <version>3.5.12</version>
         <relativePath/>
     </parent>
 
@@ -19,8 +20,8 @@
 
     <properties>
         <java.version>21</java.version>
-        <!-- CVE-2026-42198 (pgjdbc client-side DoS): fixed in 42.7.11 -->
-        <postgresql.version>42.7.11</postgresql.version>
+        <!-- CVE-2026-54291 (pgjdbc): fixed in 42.7.12 -->
+        <postgresql.version>42.7.12</postgresql.version>
         <springdoc.version>2.5.0</springdoc.version>
         <jjwt.version>0.12.6</jjwt.version>
         <logstash.version>7.4</logstash.version>

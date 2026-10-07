@@ -43,7 +43,10 @@ management:
         liveness:
           include: ping
         readiness:
-          include: ping,db,kafka
+          # NB: kafka is intentionally NOT in readiness. The transactional
+          # outbox means transfers keep committing when Kafka is down, so
+          # Kafka must not gate traffic. The relay's backlog metric covers it.
+          include: ping,db
   health:
     kafka:
       enabled: true
