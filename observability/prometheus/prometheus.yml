@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: ledgerflow
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["app:8080"]
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: "ledgerflow_.*|jvm_.*|process_.*|http_server_requests.*|kafka_.*"
+        action: keep
