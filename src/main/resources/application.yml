@@ -1,0 +1,82 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ledgerflow
+  datasource:
+    url: ${LEDGERFLOW_DB_URL:jdbc:postgresql://localhost:5432/ledgerflow}
+    username: ${LEDGERFLOW_DB_USER:ledgerflow}
+    password: ${LEDGERFLOW_DB_PASSWORD:ledgerflow}
+    hikari:
+      maximum-pool-size: 20
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  kafka:
+    bootstrap-servers: ${LEDGERFLOW_KAFKA_BOOTSTRAP:localhost:19092}
+  data:
+    redis:
+      host: ${LEDGERFLOW_REDIS_HOST:localhost}
+      port: ${LEDGERFLOW_REDIS_PORT:6379}
+  security:
+    user:
+      name: disabled
+      password: disabled
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+      group:
+        liveness:
+          include: ping
+        readiness:
+          include: ping,db,kafka
+  health:
+    kafka:
+      enabled: true
+  metrics:
+    tags:
+      application: ledgerflow
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318}/v1/traces
+
+ledgerflow:
+  outbox:
+    poll-ms: 1000
+  reconciliation:
+    interval-ms: 60000
+    late-threshold-seconds: 120
+  settlement:
+    webhook-secret: ${LEDGERFLOW_WEBHOOK_SECRET:dev-webhook-secret}
+    delayed-poll-ms: 5000
+  fx:
+    stale-after-hours: 72
+    refresh-cron: "0 0 17 * * *"
+  auth:
+    jwt-secret: ${LEDGERFLOW_JWT_SECRET:dev-secret-change-me-in-production-please}
+    jwt-ttl-seconds: 3600
+    dev-token-endpoint: true
+  ratelimit:
+    per-minute: 120
+
+logging:
+  level:
+    com.ledgerflow: INFO
+    org.springframework.kafka: WARN
