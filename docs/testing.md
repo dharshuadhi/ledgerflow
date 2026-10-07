@@ -5,7 +5,7 @@
 | Layer | Tooling | What's covered |
 |---|---|---|
 | Unit | JUnit 5 | `Money` math, invariant validation, ECB XML parsing, conversion rounding |
-| Integration | Embedded Postgres + embedded Kafka | everything below |
+| Integration | Testcontainers (Postgres 16, Redpanda) | everything below |
 | API | MockMvc + JWT | auth, RBAC, validation shapes, idempotency headers, error codes |
 | Concurrency | thread pools | 400 parallel transfers: global `debits == credits`, per-account cache == postings |
 | Idempotency | — | replay, key-reuse rejection, 8-way racing duplicates, failure replay |

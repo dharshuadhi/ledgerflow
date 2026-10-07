@@ -111,8 +111,8 @@ dashboard provisioned · liveness/readiness probes.
 
 ## Testing
 
-`mvn verify` — unit, integration (embedded Postgres + embedded Kafka, no Docker
-needed), concurrency torture tests (400 parallel transfers asserting global
+`mvn verify` — unit, integration (Testcontainers: real Postgres 16 + Redpanda),
+concurrency torture tests (400 parallel transfers asserting global
 `debits == credits`), idempotency races, webhook dedup, projection rebuild,
 reconciliation. k6 scripts for soak, hot-account, and idempotency-replay
 loads. See [docs/testing.md](docs/testing.md).

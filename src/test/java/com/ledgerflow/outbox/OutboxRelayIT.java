@@ -40,7 +40,7 @@ class OutboxRelayIT extends AbstractIntegrationTest {
                 "ledger.transaction.posted.v1", 1, payload);
 
         // Raw consumer (not part of the app) to observe what the relay publishes.
-        String brokers = System.getProperty("spring.embedded.kafka.brokers");
+        String brokers = KAFKA.getBootstrapServers();
         var consumerProps = KafkaTestUtils.consumerProps(brokers, "outbox-it", "false");
         consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
