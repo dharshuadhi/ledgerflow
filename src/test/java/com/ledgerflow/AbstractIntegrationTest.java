@@ -28,7 +28,8 @@ public abstract class AbstractIntegrationTest {
 
     @Container
     protected static final KafkaContainer KAFKA =
-            new KafkaContainer(DockerImageName.parse("redpandadata/redpanda:v23.3.9"));
+            new KafkaContainer(DockerImageName.parse("redpandadata/redpanda:v23.3.9")
+                    .asCompatibleSubstituteFor("confluentinc/cp-kafka"));
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
