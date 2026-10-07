@@ -1,0 +1,113 @@
+# Local development environment: `docker compose up`
+# Starts PostgreSQL, Redpanda (Kafka-compatible), Redis, the app,
+# and the observability stack (Prometheus, Grafana, Jaeger).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ledgerflow
+      POSTGRES_PASSWORD: ledgerflow
+      POSTGRES_DB: ledgerflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ledgerflow"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redpanda:
+    image: redpandadata/redpanda:v23.3.9
+    command:
+      - redpanda
+      - start
+      - --smp 1
+      - --overprovisioned
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+    ports:
+      - "19092:19092"
+      - "9644:9644"
+    volumes:
+      - rpkdata:/var/lib/redpanda/data
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -q 'Healthy:.*true'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      LEDGERFLOW_DB_URL: jdbc:postgresql://postgres:5432/ledgerflow
+      LEDGERFLOW_DB_USER: ledgerflow
+      LEDGERFLOW_DB_PASSWORD: ledgerflow
+      LEDGERFLOW_KAFKA_BOOTSTRAP: redpanda:9092
+      LEDGERFLOW_REDIS_HOST: redis
+      LEDGERFLOW_JWT_SECRET: ${LEDGERFLOW_JWT_SECRET:-dev-secret-change-me-in-production-please}
+      LEDGERFLOW_WEBHOOK_SECRET: ${LEDGERFLOW_WEBHOOK_SECRET:-dev-webhook-secret}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health/liveness | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - app
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.62
+    ports:
+      - "16686:16686" # UI
+      - "4318:4318"   # OTLP HTTP
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+
+volumes:
+  pgdata:
+  rpkdata:
+  redisdata:
