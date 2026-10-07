@@ -51,7 +51,14 @@ public abstract class AbstractIntegrationTest {
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
         // Each test class gets a fresh database on the shared server.
+        // (getJdbcUrl does NOT create it — create explicitly.)
         String db = "test_" + System.nanoTime();
+        try (var conn = POSTGRES.getPostgresDatabase().getConnection();
+             var st = conn.createStatement()) {
+            st.execute("CREATE DATABASE \"" + db + "\"");
+        } catch (Exception e) {
+            throw new IllegalStateException("could not create test database " + db, e);
+        }
         registry.add("spring.datasource.url",
                 () -> POSTGRES.getJdbcUrl("postgres", db));
         registry.add("spring.datasource.username", () -> "postgres");
