@@ -4,10 +4,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.redpanda.RedpandaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /**
@@ -27,9 +27,8 @@ public abstract class AbstractIntegrationTest {
             new PostgreSQLContainer<>("postgres:16-alpine");
 
     @Container
-    protected static final KafkaContainer KAFKA =
-            new KafkaContainer(DockerImageName.parse("redpandadata/redpanda:v23.3.9")
-                    .asCompatibleSubstituteFor("confluentinc/cp-kafka"));
+    protected static final RedpandaContainer KAFKA =
+            new RedpandaContainer(DockerImageName.parse("redpandadata/redpanda:v23.3.9"));
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
